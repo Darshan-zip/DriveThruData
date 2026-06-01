@@ -39,3 +39,19 @@ for i,sent in enumerate(sents):
   })
 
 index.upsert_records(records=records, namespace="sample-namespace")
+
+
+index_name = "sparse-vectors"
+
+if not pc.has_index(index_name):
+    pc.create_index_for_model(
+        name=index_name,
+        cloud="aws",
+        region="us-east-1",
+        embed={
+            "model":"pinecone-sparse-english-v0",
+            "field_map":{"text": "chunk_text"}
+        }
+    )
+index = pc.Index(index_name)
+index.upsert_records(records=records, namespace="sample-namespace")
