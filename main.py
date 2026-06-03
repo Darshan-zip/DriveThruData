@@ -1,4 +1,4 @@
-from ollama import embed
+import ollama
 from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
 import os
@@ -90,14 +90,14 @@ schema = (
 ) 
 if not pc.has_index(sparse_index_name):
     index_model = pc.preview.indexes.create(
-        name="articles1",
+        name="articles",
         schema=schema,
         read_capacity={"mode": "OnDemand"},
     )
-index_model = pc.preview.index(name="articles1")
-host = index_model.host
+doc_index_model = pc.preview.index(name="articles")
+host = doc_index_model.host
 
-NAMESPACE = 'document-namespace'
+NAMESPACE = 'sample-namespace'
 
 docs = [
     {
@@ -125,7 +125,7 @@ docs = [
 
 # batch_upsert splits docs into parallel requests — use it for large sets.
 # For small batches (≤1000 docs), index.documents.upsert(namespace=..., documents=...) is simpler.
-'''index_model.documents.batch_upsert(
+'''doc_index_model.documents.batch_upsert(
     namespace=NAMESPACE,
     documents=docs,
     batch_size=50,
@@ -133,25 +133,9 @@ docs = [
     show_progress=True,
 )'''
 
-query = "Apples"
+#query = "Machine Learning"
 
-dense_results = dense_index.search(
-    namespace="sample-namespace",
-    top_k=40,
-    inputs={
-        "text": query
-    }
-)
 
-#print(dense_results)
-
-sparse_results = sparse_index.search(
-    namespace="sample-namespace",
-    top_k=40,
-    inputs={
-        "text": query
-    }
-)
 
 #print(sparse_results)
 
@@ -166,25 +150,95 @@ def merge_chunks(h1, h2):
     result = [{'id': hit['id'], 'chunk_text': hit['fields']['chunk_text']} for hit in sorted_hits]
     return result
 
-merged_results = merge_chunks(sparse_results, dense_results)
-
-print('[\n   ' + ',\n   '.join(str(obj) for obj in merged_results) + '\n]')
 
 
-result = pc.inference.rerank(
-    model="bge-reranker-v2-m3",
-    query=query,
-    documents=merged_results,
-    rank_fields=["chunk_text"],
-    top_n=10,
-    return_documents=True,
-    parameters={
-        "truncate": "END"
-    }
+
+
+
+'''This is the working code for full text search retrieval
+doc_response=doc_index_model.documents.search(
+    namespace=NAMESPACE,
+    top_k=5,
+    score_by=[
+        {
+            "type": "text",
+            "field": "body",
+            "query":query
+        }
+    ],
+    filter={
+        "year": {"$gte": 2024},
+        "body": {"$match_phrase": "natural language"},
+    },
+    include_fields=["title", "body", "category", "year"]
+    
 )
+print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+for match in doc_response.matches:
+    print(match._id, match._score, getattr(match, "title", ""))'''
+    
+    
 
-print("Query", query)
-print('-----')
-for row in result.data:
-    print(f"{row['document']['id']} - {round(row['score'], 2)} - {row['document']['chunk_text']}")
 
+def retrieve(query):
+    dense_results = dense_index.search(
+        namespace="sample-namespace",
+        top_k=40,
+        inputs={
+            "text": query
+        }
+    )
+
+
+    sparse_results = sparse_index.search(
+        namespace="sample-namespace",
+        top_k=40,
+        inputs={
+            "text": query
+        }
+    )
+    merged_results = merge_chunks(sparse_results, dense_results)
+
+    #print('[\n   ' + ',\n   '.join(str(obj) for obj in merged_results) + '\n]')
+    
+    result = pc.inference.rerank(
+        model="bge-reranker-v2-m3",
+        query=query,
+        documents=merged_results,
+        rank_fields=["chunk_text"],
+        top_n=10,
+        return_documents=True,
+        parameters={
+            "truncate": "END"
+        }
+    )
+
+    print("Query", query)
+    print('-----')
+    '''for row in result.data:
+        print(f"{row['document']['id']} - {round(row['score'], 2)} - {row['document']['chunk_text']}")'''
+    return '\n'.join([f'- {row["document"]["chunk_text"]}' for row in result.data])
+
+
+def RAG(input_query):
+    retreived_data=retrieve(input_query)
+
+    instruction_prompt = f'''You are a helpful chatbot.
+    Use only the following pieces of context to answer the question. Don't make up any new information:
+    {retreived_data}'''
+
+    LANGUAGE_MODEL='llama3'
+
+    stream = ollama.chat(
+    model=LANGUAGE_MODEL,
+    messages=[
+        {'role': 'system', 'content': instruction_prompt},
+        {'role': 'user', 'content': input_query},
+    ],
+    stream=True,
+    )
+    print('Chatbot response:')
+    for chunk in stream:
+        print(chunk['message']['content'], end='', flush=True)
+
+RAG("tell me about Apples")
