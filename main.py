@@ -189,7 +189,6 @@ def retrieve(query):
         }
     )
 
-
     sparse_results = sparse_index.search(
         namespace="sample-namespace",
         top_k=40,
@@ -199,8 +198,6 @@ def retrieve(query):
     )
     merged_results = merge_chunks(sparse_results, dense_results)
 
-    #print('[\n   ' + ',\n   '.join(str(obj) for obj in merged_results) + '\n]')
-    
     result = pc.inference.rerank(
         model="bge-reranker-v2-m3",
         query=query,
@@ -213,32 +210,88 @@ def retrieve(query):
         }
     )
 
-    print("Query", query)
-    print('-----')
-    '''for row in result.data:
-        print(f"{row['document']['id']} - {round(row['score'], 2)} - {row['document']['chunk_text']}")'''
-    return '\n'.join([f'- {row["document"]["chunk_text"]}' for row in result.data])
+    return result.data
 
+# implement memory using firebase.
+def grade_documents(query, documents):
+    """Grade the retrieved documents and return only the relevant ones."""
+    if not documents:
+        return []
+
+    graded_docs = []
+    grading_prompt = f"""Grade the following document based on its relevance to the query. 
+    Respond only with a single word: 'Relevant' or 'Irrelevant'.
+
+    Query: {query}
+    Document: {documents[0]['document']['chunk_text']}
+    """
+    
+    # For simplicity in this implementation, we grade documents one by one
+    # In a production system, you could batch this or use a specialized model
+    for doc in documents:
+        prompt = f"""Grade the following document based on its relevance to the query. 
+        Respond only with a single word: 'Relevant' or 'Irrelevant'.
+
+        Query: {query}
+        Document: {doc['document']['chunk_text']}
+        """
+        response = ollama.chat(
+            model='llama3',
+            messages=[{'role': 'user', 'content': prompt}]
+        )
+        grade = response['message']['content'].strip().capitalize()
+        if 'Relevant' in grade:
+            graded_docs.append(doc)
+    
+    return graded_docs
 
 def RAG(input_query):
-    retreived_data=retrieve(input_query)
+    # 1. Initial Retrieval
+    retrieved_data = retrieve(input_query)
+    
+    # 2. Corrective Step: Grading
+    relevant_docs = grade_documents(input_query, retrieved_data)
+    
+    if not relevant_docs:
+        # Corrective Action: If no relevant docs, try a fallback search (Full Text)
+        print("\n[CRAG] No relevant documents found in vector search. Trying full-text fallback...")
+        doc_response = doc_index_model.documents.search(
+            namespace=NAMESPACE,
+            top_k=5,
+            score_by=[{"type": "text", "field": "body", "query": input_query}],
+            include_fields=["body"]
+        )
+        # Convert full-text results to the same format as retrieve()
+        relevant_docs = [{"document": {"chunk_text": match.body}} for match in doc_response.matches]
+    else:
+        print(f"\n[CRAG] {len(relevant_docs)} relevant documents found.")
 
+    # 3. Final Generation
+    context_text = '\n'.join([f"- {doc['document']['chunk_text']}" for doc in relevant_docs])
+    
     instruction_prompt = f'''You are a helpful chatbot.
-    Use only the following pieces of context to answer the question. Don't make up any new information:
-    {retreived_data}'''
+    Use only the following pieces of context to answer the question. Don't make up any new information. If the given pieces of context does not contain any information related to the user query, then just say that "I do not have enough information to answer this question":
+    {context_text}'''
 
     LANGUAGE_MODEL='llama3'
 
     stream = ollama.chat(
-    model=LANGUAGE_MODEL,
-    messages=[
-        {'role': 'system', 'content': instruction_prompt},
-        {'role': 'user', 'content': input_query},
-    ],
-    stream=True,
+        model=LANGUAGE_MODEL,
+        messages=[
+            {'role': 'system', 'content': instruction_prompt},
+            {'role': 'user', 'content': input_query},
+        ],
+        stream=True,
     )
-    print('Chatbot response:')
+    print('\nChatbot response:')
     for chunk in stream:
         print(chunk['message']['content'], end='', flush=True)
 
-RAG("tell me about Apples")
+if __name__ == "__main__":
+    user_input=""
+    while user_input!="x":
+        user_input=input("\n\nQuery:")
+        RAG(user_input)
+        
+        
+#correctiveRag vs agentic rag
