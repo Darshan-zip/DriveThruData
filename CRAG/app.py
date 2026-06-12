@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify
-from main import RAG, retrieve, grade_documents, merge_chunks, dense_index, sparse_index, doc_index_model, NAMESPACE
+from CRAG.main import RAG, retrieve, grade_documents, merge_chunks, dense_index, sparse_index, doc_index_model, NAMESPACE
 import ollama
 import io
 from contextlib import redirect_stdout
