@@ -6,11 +6,20 @@ class HybridRAG(BaseRAG):
     """Combines Dense and Sparse retrieval with Reranking."""
     
     def _merge_chunks(self, h1, h2):
-        # Simplified merge logic based on the user's existing code
-        combined = h1 + h2
-        # Deduplicate and sort by a generic 'score' if available, else just return
-        deduped = {hit.get('id', i): hit for i, hit in enumerate(combined)}.values()
-        return list(deduped)
+        # Extract matches from Pinecone SearchRecordsResponse objects
+        matches1 = h1.matches if hasattr(h1, 'matches') else h1
+        matches2 = h2.matches if hasattr(h2, 'matches') else h2
+        
+        combined = matches1 + matches2
+        
+        # Use a dictionary to deduplicate by ID
+        deduped = {}
+        for match in combined:
+            deduped[match.id] = match
+            
+        return list(deduped.values())
+
+
 
     def retrieve(self, query: str) -> List[Dict[str, Any]]:
         dense_index = pc.Index(DENSE_INDEX_NAME)

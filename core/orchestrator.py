@@ -51,4 +51,4 @@ Respond ONLY with the name of the strategy (e.g., 'graph' or 'agentic')."""
             strategy_name = "hybrid"
             
         print(f"[Router] Routed to: {strategy_name}")
-        return self.strategies[strategy_name].run(query)
+        return strategy_name, self.strategies[strategy_name].run(query)

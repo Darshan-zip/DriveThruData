@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-RAG Explorer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="main-wrapper">
+        <aside class="sidebar">
+            <h2>RAG Strategies</h2>
+            <nav>
+                <button class="nav-btn active" data-strategy="normal">Normal RAG</button>
+                <button class="nav-btn" data-strategy="hybrid">Hybrid RAG</button>
+                <button class="nav-btn" data-strategy="corrective">Corrective RAG</button>
+                <button class="nav-btn" data-strategy="graph">Graph RAG</button>
+                <button class="nav-btn" data-strategy="cache">Cache RAG</button>
+                <button class="nav-btn" data-strategy="agentic">Agentic RAG</button>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <header>
+                <h1 id="current-strategy-title">Normal RAG</h1>
+                <p id="strategy-description">Simple fact retrieval based on semantic search.</p>
+            </header>
+
+            <div id="chat-window" class="chat-window">
+                <div class="message system">Welcome to the individual strategy tester. Please enter a query.</div>
+            </div>
+
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="Enter your query..." autocomplete="off">
+                <button id="send-btn">Send</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

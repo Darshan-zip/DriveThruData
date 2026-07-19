@@ -38,7 +38,7 @@ class CorrectiveRAG(BaseRAG):
             # Re-trying with a wider search window as a simple fallback
             dense_index = pc.Index(DENSE_INDEX_NAME)
             fallback_docs = dense_index.search(namespace=NAMESPACE, top_k=10, inputs={"text": query})
-            return fallback_docs if isinstance(fallback_docs, list) else fallback_docs.get('hits', [])
+            return fallback_docs.matches if hasattr(fallback_docs, 'matches') else fallback_docs
         
         return relevant_docs
 

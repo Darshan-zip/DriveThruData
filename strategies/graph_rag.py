@@ -10,9 +10,9 @@ class GraphRAG(BaseRAG):
         # In a full version, we would use LLM to extract nodes
         with driver.session() as session:
             result = session.run(
-                "MATCH (n)-[r]->(m) WHERE n.name CONTAINS $query OR m.name CONTAINS $query "
+                "MATCH (n)-[r]->(m) WHERE n.name CONTAINS $searchTerm OR m.name CONTAINS $searchTerm "
                 "RETURN n.name as source, type(r) as rel, m.name as target", 
-                query=query
+                searchTerm=query
             )
             records = [rec.data() for rec in result]
             
