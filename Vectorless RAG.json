@@ -1,0 +1,655 @@
+{
+  "name": "Vectorless RAG",
+  "nodes": [
+    {
+      "parameters": {
+        "collection": "Patient_demographic_records",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.3,
+      "position": [
+        1648,
+        -48
+      ],
+      "id": "e473f9ea-4ba4-4904-b0fe-6afc0bdfa734",
+      "name": "Find documents1",
+      "credentials": {
+        "mongoDb": {
+          "id": "NPrPF4lf6kP8M2cn",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Basic LLM Chain').item.json.output.desc }}",
+                    "rightValue": "Patient_lab_record",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "81c6f723-90a0-48ee-9539-09d326edec43"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "22ed961e-bf30-432e-836e-5c586f4b744f",
+                    "leftValue": "={{ $('Basic LLM Chain').item.json.output.desc }}",
+                    "rightValue": "Patient_demographic_record",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1168,
+        -64
+      ],
+      "id": "f8180c5e-11d6-46c7-a6e8-bef8c38f8d5a",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "patient:P1001:summary",
+        "keyType": "string",
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1648,
+        416
+      ],
+      "id": "a27b36ea-27b3-4da7-8df0-315fe4d30966",
+      "name": "Redis1",
+      "credentials": {
+        "redis": {
+          "id": "qPKIpOkyLtPThvTp",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Basic LLM Chain').item.json.output.desc }}",
+                    "rightValue": "appointments",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "81c6f723-90a0-48ee-9539-09d326edec43"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "22ed961e-bf30-432e-836e-5c586f4b744f",
+                    "leftValue": "={{ $('Basic LLM Chain').item.json.output.desc }}",
+                    "rightValue": "patient",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1136,
+        272
+      ],
+      "id": "5b559fa2-4de4-4d6e-bf27-130cd20e6946",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"type\":\"\",\n  \"desc\":\"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        352,
+        192
+      ],
+      "id": "2c8d12ac-7f68-4072-afd9-236b21e42918",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "appointment:P1001",
+        "keyType": "string",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1648,
+        176
+      ],
+      "id": "af21546c-927b-4e7d-8b98-37b73442a6cb",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "qPKIpOkyLtPThvTp",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "collection": "Patient_lab_records",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.3,
+      "position": [
+        1648,
+        -256
+      ],
+      "id": "37262f7c-f148-436e-baa7-4758286576f9",
+      "name": "Find documents",
+      "credentials": {
+        "mongoDb": {
+          "id": "NPrPF4lf6kP8M2cn",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "hospital_employees",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1648,
+        -448
+      ],
+      "id": "47e624bb-e022-4615-b18e-a08029ce7478",
+      "name": "Get many rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "udXep33ZMpbBhV6C",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gemma4:31b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmOllama",
+      "typeVersion": 1,
+      "position": [
+        208,
+        208
+      ],
+      "id": "09a46c5d-eb79-47f6-96d0-e4a6485b087c",
+      "name": "Ollama Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "SEPUxXyLRCWJuzRq",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.type }}",
+                    "rightValue": "SQL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "7eab1c63-dcf2-4803-86c5-3df256c2feff"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "cd5c6869-657e-4c51-93ae-9721ed3db015",
+                    "leftValue": "={{ $json.output.type }}",
+                    "rightValue": "MONGODB",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c034a433-dc0a-45fd-8703-eff16353029f",
+                    "leftValue": "={{ $json.output.type }}",
+                    "rightValue": "GRAPH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "6186c7f0-57ee-4920-8ed8-c677446849e0",
+                    "leftValue": "={{ $json.output.type }}",
+                    "rightValue": "CACHE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        -32
+      ],
+      "id": "b8efccb7-37a0-4f42-9d5e-0ba1e1d1bb16",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=build a json:{\n\"type\":\"\",\n\"desc\":\"\"\n}\n1. If the user message asks about employee details, set type field in json to \"SQL\"\n2. If the user message asks about Patient_lab_record, set type field in json to \"MONGODB\" and set desc field in json to \"Patient_lab_record\"\n3.If the user message asks about Patient_lab_record, set type field in json to \"MONGODB\" and set desc field in json to \"Patient_demographic_record\"\n4. If the user message asks about some relationships, set type field in json to \"GRAPH\"\n5. If the user message asks about patient summary, set type field in json to \"CACHE\", and set the desc field in json to \"patient\".\n6.5. If the user message asks about appointments, set type field in json to \"CACHE\", and set the desc field in json to \"appointments\".\nuser message:  {{ $json.chatInput }}\n",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        208,
+        0
+      ],
+      "id": "81b3a972-5bd7-416f-981e-e055150dbcbe",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0bb535de-bce2-4c74-9718-175f246bdcc7",
+      "name": "When chat message received",
+      "webhookId": "e2fe2a08-9337-4d2f-986a-15f7493f7003"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=data:{{ JSON.stringify($json, null, 2) }}\nusing this data answer the user query:{{ $('When chat message received').item.json.chatInput }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2416,
+        -80
+      ],
+      "id": "cff23a5e-9b08-4040-8b73-c098d713d05e",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2112,
+        -128
+      ],
+      "id": "1ae60307-5999-4dc6-adb8-f5ba3a72f0c7",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "model": "gemma4:31b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmOllama",
+      "typeVersion": 1,
+      "position": [
+        2416,
+        112
+      ],
+      "id": "967989a5-74a4-4001-b22b-53bc7da0b461",
+      "name": "Ollama Model1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "SEPUxXyLRCWJuzRq",
+          "name": "Ollama account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "Find documents",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find documents1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Redis1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find documents": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Find documents1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Redis1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "fff99bb2-dd56-4306-9ee8-77b26fdc2464",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f8a1f92d65f25f4aeeb2d8e3c233a45563426f0492c229e96c16d4f584d11b09"
+  },
+  "nodeGroups": [],
+  "id": "wuH1rDQ7lxa648Hq",
+  "tags": []
+}
