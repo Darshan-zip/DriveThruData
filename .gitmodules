@@ -1,0 +1,3 @@
+[submodule "RAG_PIPELINE_FINAL"]
+	path = RAG_PIPELINE_FINAL
+	url = https://github.com/Darshan-zip/RAG_Pipeline.git
